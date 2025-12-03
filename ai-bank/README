@@ -1,0 +1,191 @@
+# 🏦 Banco Ágil — Sistema de Atendimento Inteligente com Arquitetura Multi-Agente
+
+## 📌 Sumário Executivo
+
+Este projeto implementa um sistema de atendimento bancário utilizando uma **arquitetura de agentes especializados**, orquestrados por um **StateGraph do LangGraph**, garantindo controle determinístico de fluxo, persistência contextual e execução orientada a regras de negócio.
+
+O objetivo é simular um ambiente de atendimento realista, porém com segurança, previsibilidade e auditabilidade — características essenciais em cenários financeiros.
+
+---
+
+## 🧩 Arquitetura Geral
+
+A solução é composta por quatro agentes independentes:
+
+- **Triagem:** Autenticação + intenção.
+- **Crédito:** Análise de aumento de limite com regras determinísticas.
+- **Entrevista:** Coleta estruturada de dados para recálculo de score.
+- **Câmbio:** Consulta de cotações via tool.
+
+A interação entre os agentes é controlada pelo **LangGraph (StateGraph)**, que permite:
+
+- Roteamento baseado em estado.
+- Ciclos (ex.: rejeição → entrevista → crédito).
+- Persistência de estado por sessão/thread.
+- Controle explícito de transições via ferramentas e lógica Python.
+
+---
+
+## 🔧 Tecnologias Utilizadas
+
+| Componente | Tecnologia | Justificativa |
+| :--- | :--- | :--- |
+| **Orquestração** | **LangGraph** | Permite modelos com loops, roteamento condicional e estado persistente. |
+| **LLM** | **Google Gemini 1.5 Flash** | Baixo custo, rápidas tool-calls, ideal para classificação e roteamento. |
+| **Interface** | **Streamlit** | Facilita implementação de chat interativo para validação visual. |
+| **Tools** | **Funções Python** | Evita alucinações e garante deterministicidade em cálculos financeiros. |
+
+---
+
+## 🏛️ Modelo de Estado (AgentState)
+
+O sistema utiliza um dicionário tipado responsável por consolidar:
+
+- Histórico de mensagens.
+- Dados do cliente (CPF, nome, score, limite).
+- Flags essenciais (`authenticated`, `interview_complete`, `next_agent`, `last_intent`).
+
+O uso de `Annotated` permite operações de merge customizadas para histórico e variáveis persistentes.
+
+---
+
+## 🔀 Fluxo entre Agentes (StateGraph)
+
+A arquitetura segue o seguinte fluxo:
+
+```mermaid
+graph TD
+    A[Usuário] --> T[Triagem]
+
+    T -->|Crédito| C[Crédito]
+    T -->|Câmbio| X[Câmbio]
+    T -->|Atualização| I[Entrevista]
+
+    C -->|Rejeitado| I
+    I -->|Dados Completos| C
+    C -->|Aprovado| F[Fim]
+    X --> F
+```
+> **Nota sobre o Roteamento:** O roteamento ocorre através da variável `next_agent`, interpretada por um nó de decisão configurado no orquestrador.
+
+## 🔍 Estratégias Técnicas Implementadas
+
+### 1. Separação total entre lógica de negócios e LLM
+Nenhum cálculo financeiro depende do modelo de linguagem. Todos os valores são processados por funções Python puras para garantir precisão:
+* `validar_cliente`
+* `processar_solicitacao_aumento`
+* `calcular_atualizar_score`
+* `consultar_cotacao_real`
+
+### 2. Prevenção de loops e alucinações
+Para garantir a estabilidade do sistema, foram adotadas as seguintes configurações:
+* **Parâmetros do Modelo:** `temperature=0`, `max_retries=0`.
+* **Estrutura:** Prompts orientados a regras e orquestração determinística via grafo.
+
+### 3. Persistência de Sessão
+O uso de `thread_id` permite a reconstrução de estado mesmo quando somente a última mensagem é enviada da Interface de Usuário (UI) para o grafo.
+
+### 4. UI desacoplada do estado interno
+A interface em **Streamlit** exibe o histórico ao usuário, mas somente a última mensagem é enviada ao grafo, garantindo:
+* Não repetição de etapas.
+* Correto disparo de transições.
+* Execução isolada por agente.
+
+---
+
+## 📊 Regras de Negócio Implementadas
+
+### Análise de Crédito
+* Validação de limite máximo por score (via CSV).
+* Cálculo determinístico no Python.
+* Registro de auditoria.
+* Proposta automática de entrevista quando necessário.
+
+### Recálculo de Score
+* Coleta condicional de **5 variáveis**.
+* O LLM dispara a *tool* somente após todos os dados serem preenchidos.
+* Atualização de score persistida no estado.
+
+### Câmbio
+* *Tool* mandatória para respostas com números.
+* Garante precisão absoluta dos valores retornados.
+
+---
+
+## 🧪 Cenários de Teste Validados
+
+* **1. Autenticação + intenção correta:** Triagem identifica crédito/câmbio/atualização mesmo em frases ambíguas.
+* **2. Recusa → entrevista → aceitação:** Fluxo completo validado com score baixo e posterior reavaliação.
+* **3. Comandos diretos:** Ex.: *"Quero 2000"* é interpretado corretamente como solicitação de aumento.
+* **4. Prevenção de loops:** Cada agente roda isoladamente, sem se repetir ou retornar para triagem indevidamente.
+
+---
+
+## 📦 Estrutura do Projeto
+
+```plaintext
+src/
+  ├── agents/
+  │    ├── triage_agent.py
+  │    ├── credit_agent.py
+  │    ├── interview_agent.py
+  │    └── exchange_agent.py
+  ├── core/
+  │    ├── orchestrator.py
+  │    └── state.py
+  ├── tools/
+  │    ├── file_ops.py
+  │    ├── credit_ops.py
+  │    ├── score_calculator.py
+  │    └── currency_ops.py
+  └── ui/
+       └── streamlit_app.py
+data/
+  ├── clientes.csv
+  ├── limites_credito.csv
+  └── ...
+```
+
+---
+
+## 🚀 Execução Local (Quickstart)
+
+### 1. Instalação
+Execute o comando abaixo para instalar as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configuração de ambiente
+Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+
+```ini
+GOOGLE_API_KEY="sua-chave"
+```
+
+### 3. Execução
+Inicie a aplicação Streamlit:
+
+```bash
+python -m streamlit run src/ui/streamlit_app.py
+```
+
+---
+
+## 🛡️ Considerações de Segurança
+
+* Arquivo `.env` ignorado via `.gitignore`.
+* Nenhum segredo exposto em código-fonte.
+* Todas as decisões financeiras são executadas em Python (não no LLM).
+* Log de auditoria implementado para solicitações de crédito.
+
+---
+
+## 📈 Possíveis Evoluções (Produção)
+
+* Persistência distribuída via **Redis**.
+* Observabilidade via **LangSmith** ou **Datadog**.
+* Gestão de segredos via **AWS Secrets Manager**.
+* **RAG** (Retrieval-Augmented Generation) para políticas internas do banco.
+* Versionamento de estados do grafo para auditoria regulatória.
