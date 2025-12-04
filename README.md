@@ -111,7 +111,15 @@ A interface em **Streamlit** exibe o histórico ao usuário, mas somente a últi
 * Garante precisão absoluta dos valores retornados.
 
 ---
+### 👥 Dados para Teste (Massa de Dados)
 
+| Nome | CPF | Data Nasc. | Perfil | Objetivo do Teste |
+| :--- | :--- | :--- | :--- | :--- |
+| **Carlos Souza** | `11122233344` | `2000-01-10` | Score Baixo (450) | Testar fluxo de **Recusa e Interview**. |
+| **Ana Pereira** | `55566677788` | `1978-12-25` | Score Alto (900) | Testar **Aprovação Imediata** ou regras de teto. |
+| **João da Silva** | `12345678900` | `1990-05-15` | Score Médio (650) | Testar **Câmbio** e navegação entre agentes. |
+
+---
 ## 🧪 Cenários de Teste Validados
 
 * **1. Autenticação + intenção correta:** Triagem identifica crédito/câmbio/atualização mesmo em frases ambíguas.
