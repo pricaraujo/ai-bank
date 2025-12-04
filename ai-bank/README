@@ -139,11 +139,12 @@ src/
   │    ├── score_calculator.py
   │    └── currency_ops.py
   └── ui/
-       └── streamlit_app.py
-data/
-  ├── clientes.csv
-  ├── limites_credito.csv
-  └── ...
+  |      └── streamlit_app.py
+  |
+  └──data/
+        ├── clientes.csv
+        ├── score_limit.csv
+        └── ...
 ```
 
 ---
@@ -151,7 +152,7 @@ data/
 ## 🚀 Execução Local (Quickstart)
 
 ### 1. Instalação
-Execute o comando abaixo para instalar as dependências:
+Execute o comando abaixo para instalar as dependências (foi utilizado o pip freeze > requirements.txt para que as versões das dependencias em qualquer máquina fossem coerentes com a máquina local):
 
 ```bash
 pip install -r requirements.txt
@@ -186,6 +187,10 @@ python -m streamlit run src/ui/streamlit_app.py
 
 * Persistência distribuída via **Redis**.
 * Observabilidade via **LangSmith** ou **Datadog**.
-* Gestão de segredos via **AWS Secrets Manager**.
-* **RAG** (Retrieval-Augmented Generation) para políticas internas do banco.
-* Versionamento de estados do grafo para auditoria regulatória.
+* Gestão de segredos via **Google Secrets Manager** (chaves do projeto, retirar o .env, fazer gerenciamento em cloud e gestão de segurança).
+* **RAG** (Retrieval-Augmented Generation) para políticas internas do banco, informações da moeda ou aprimoramento sobre investimentos (B3 por exemplo).
+* Uso de pipeline integrada via Terraform/Tekton e Google Cloud para gerenciamento de segurança e confiabilidade.
+* Infraestrura com google cloud: backend para midware (Flask) + Agentic-RAG + arquiteturamulti-agente com lang-graph + chatbot Frontend.
+
+---
+Essa aplicação foi desenvolvida por Priscila C. Araújo

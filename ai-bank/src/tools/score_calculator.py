@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import re
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), '../data/clients.csv')
+DATA_PATH = os.path.join(os.path.dirname(__file__), '../data/clientes.csv')
 
 def _limpar_numero(valor) -> float:
     """

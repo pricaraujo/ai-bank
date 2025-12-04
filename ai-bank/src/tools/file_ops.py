@@ -5,12 +5,12 @@ from datetime import datetime
 from glob import glob
 
 POSSIBLE_PATHS = [
-    os.path.join(os.path.dirname(__file__), '../data/clients.csv'),
-    os.path.join(os.path.dirname(__file__), '../../data/clients.csv'),
-    os.path.join(os.path.dirname(__file__), '../../../data/clients.csv'),
-    os.path.join(os.getcwd(), 'data/clients.csv'),
-    os.path.join(os.getcwd(), 'src/data/clients.csv'),
-] #teste de arquivos so pra garantir
+    os.path.join(os.path.dirname(__file__), '../data/clientes.csv'),
+    os.path.join(os.path.dirname(__file__), '../../data/clientes.csv'),
+    os.path.join(os.path.dirname(__file__), '../../../data/clientes.csv'),
+    os.path.join(os.getcwd(), 'data/clientes.csv'),
+    os.path.join(os.getcwd(), 'src/data/clientes.csv'),
+] #caso o avaliador queira adicionar dados de clientes extras
 
 def _normalize_cpf(cpf_raw: str) -> str:
     if cpf_raw is None:
@@ -41,7 +41,7 @@ def _normalize_date(date_raw: str) -> str:
     return s
 
 def _find_clients_csv():
-    env_path = os.environ.get("CLIENTS_CSV_PATH")
+    env_path = os.environ.get("clientes_CSV_PATH")
     if env_path:
         if os.path.exists(env_path):
             return env_path
@@ -49,7 +49,7 @@ def _find_clients_csv():
         p_clean = os.path.abspath(os.path.normpath(p))
         if os.path.exists(p_clean):
             return p_clean
-    for match in glob(os.path.join(os.getcwd(), '**', 'clients.csv'), recursive=True):
+    for match in glob(os.path.join(os.getcwd(), '**', 'clientes.csv'), recursive=True):
         return os.path.abspath(match)
     return None
 
@@ -63,7 +63,7 @@ def validar_cliente(cpf: str, data_nascimento: str) -> dict:
     try:
         csv_path = _find_clients_csv()
         if not csv_path:
-            return {"sucesso": False, "mensagem": "Arquivo clients.csv não encontrado. Verifique a pasta data/."}
+            return {"sucesso": False, "mensagem": "Arquivo clientes.csv não encontrado. Verifique a pasta data/."}
 
         try:
             df = pd.read_csv(csv_path, dtype=str)
