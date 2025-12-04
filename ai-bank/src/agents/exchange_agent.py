@@ -5,9 +5,14 @@ from src.core.state import AgentState
 from dotenv import load_dotenv
 
 load_dotenv()
-llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", temperature=0, max_retries=0)
 
-PROMPT = "Você é o Agente de Câmbio. Identifique a moeda e use `consultar_cotacao_real`."
+llm = ChatGoogleGenerativeAI(
+    model="gemini-flash-latest",
+    temperature=0,
+    max_retries=0
+)
+
+PROMPT = "Você é o Agente de Câmbio. Identifique a moeda que o usuário quer e use a ferramenta `consultar_cotacao_real`."
 
 def exchange_node(state: AgentState):
     messages = state['messages']
@@ -18,7 +23,21 @@ def exchange_node(state: AgentState):
     if response.tool_calls:
         args = response.tool_calls[0]['args']
         res = consultar_cotacao_real(**args)
-        content = f"Cotação {res.get('moeda')}: R$ {res.get('valor')}." if res['sucesso'] else res['mensagem']
+        
+        if res['sucesso']:
+            moeda = res.get('moeda', 'Moeda')
+            valor_raw = float(res.get('valor', 0))
+            
+            valor_fmt = f"{valor_raw:.4f}".replace('.', ',')
+            
+            content = (
+                f"**Cotação Atual**\n\n"
+                f"Moeda: **{moeda}**\n"
+                f"Valor Comercial: **R$ {valor_fmt}**"
+            )
+        else:
+            content = f"Não foi possível realizar a cotação. Motivo: {res.get('mensagem')}"
+            
         return {
             "messages": [AIMessage(content=content)],
             "next_agent": "exchange_wait"

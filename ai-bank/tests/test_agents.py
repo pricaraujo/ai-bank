@@ -11,7 +11,7 @@ from src.agents.credit_agent import credit_node
 
 class TestAgentFlow(unittest.TestCase):
 
-    # TESTE 1: TRIAGEM ---
+    # TESTE 1: TRIAGEM
     def test_triage_routing_credito(self):
         state = {
             "messages": [HumanMessage(content="Quero falar sobre crédito")],
@@ -39,7 +39,7 @@ class TestAgentFlow(unittest.TestCase):
         mock_tool.return_value = {"status": "aprovado", "max_permitido": 5000}
         
         mock_response = MagicMock()
-        mock_response.tool_calls = [] # Finge que o LLM só conversou
+        mock_response.tool_calls = []
         mock_response.content = "Resposta simulada"
         
         mock_llm.bind_tools.return_value.invoke.return_value = mock_response
